@@ -1,0 +1,760 @@
+openapi: 3.0.3
+info:
+  title: E-Book Store API
+  description: |
+    Complete REST API for E-Book Store application with user authentication, 
+    product catalog, shopping cart, order management, and payment processing.
+    
+    ## Features
+    - User authentication and authorization
+    - Product catalog with categories and brands
+    - Shopping cart management
+    - Order processing and history
+    - Gift points system
+    - Multiple payment methods
+    - Address management
+    - Product recommendations
+    
+  version: 1.0.0
+  contact:
+    name: E-Book Store Support
+    email: support@ebookstore.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:5000/api
+    description: Development server
+  - url: https://api.ebookstore.com/api
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: User authentication and registration
+  - name: Products
+    description: Product catalog operations
+  - name: Cart
+    description: Shopping cart management
+  - name: Orders
+    description: Order processing and history
+  - name: Users
+    description: User profile and settings
+  - name: Recommendations
+    description: Product recommendations
+
+paths:
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticate user with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: demo@ebook.com
+                password:
+                  type: string
+                  format: password
+                  example: demo123
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: mock-jwt-token-1
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: User registration
+      description: Register a new user account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - name
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+                  minLength: 6
+                name:
+                  type: string
+                  minLength: 2
+      responses:
+        '201':
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: User already exists or invalid data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /products:
+    get:
+      tags:
+        - Products
+      summary: Get all products
+      description: Retrieve product catalog with optional filters
+      parameters:
+        - name: category
+          in: query
+          description: Filter by category
+          schema:
+            type: string
+        - name: brand
+          in: query
+          description: Filter by brand
+          schema:
+            type: string
+        - name: search
+          in: query
+          description: Search by title or author
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+
+  /products/{id}:
+    get:
+      tags:
+        - Products
+      summary: Get product by ID
+      description: Retrieve detailed information about a specific product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Product ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Product details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /products/{id}/related:
+    get:
+      tags:
+        - Products
+      summary: Get related products
+      description: Retrieve products related to a specific product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of related products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+
+  /categories:
+    get:
+      tags:
+        - Products
+      summary: Get all categories
+      description: Retrieve list of all product categories
+      responses:
+        '200':
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                example: ["Fiction", "Science Fiction", "Romance", "Fantasy"]
+
+  /brands:
+    get:
+      tags:
+        - Products
+      summary: Get all brands
+      description: Retrieve list of all product brands
+      responses:
+        '200':
+          description: List of brands
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  /cart/{userId}:
+    get:
+      tags:
+        - Cart
+      summary: Get user cart
+      description: Retrieve shopping cart for a specific user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User cart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+
+  /cart/{userId}/add:
+    post:
+      tags:
+        - Cart
+      summary: Add item to cart
+      description: Add a product to user's shopping cart
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - productId
+                - quantity
+              properties:
+                productId:
+                  type: string
+                quantity:
+                  type: integer
+                  minimum: 1
+      responses:
+        '200':
+          description: Item added to cart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+
+  /cart/{userId}/update:
+    put:
+      tags:
+        - Cart
+      summary: Update cart item quantity
+      description: Update quantity of an item in cart
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - productId
+                - quantity
+              properties:
+                productId:
+                  type: string
+                quantity:
+                  type: integer
+                  minimum: 1
+      responses:
+        '200':
+          description: Cart updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+
+  /cart/{userId}/remove/{productId}:
+    delete:
+      tags:
+        - Cart
+      summary: Remove item from cart
+      description: Remove a product from user's cart
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Item removed from cart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+
+  /orders:
+    post:
+      tags:
+        - Orders
+      summary: Create new order
+      description: Place a new order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+      responses:
+        '201':
+          description: Order created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          description: Invalid order data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /orders/{userId}:
+    get:
+      tags:
+        - Orders
+      summary: Get user orders
+      description: Retrieve order history for a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+
+  /orders/{orderId}:
+    delete:
+      tags:
+        - Orders
+      summary: Cancel order
+      description: Cancel an order (within 48 hours)
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order cancelled successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Order cancelled successfully
+        '400':
+          description: Cannot cancel order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/{userId}/addresses:
+    get:
+      tags:
+        - Users
+      summary: Get user addresses
+      description: Retrieve all addresses for a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of addresses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Address'
+
+    post:
+      tags:
+        - Users
+      summary: Add new address
+      description: Add a new delivery address for user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddressInput'
+      responses:
+        '201':
+          description: Address added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+
+  /users/{userId}/gift-points:
+    get:
+      tags:
+        - Users
+      summary: Get gift points balance
+      description: Retrieve user's gift points balance
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Gift points balance
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  giftPoints:
+                    type: integer
+                    example: 500
+
+  /recommendations/{userId}:
+    get:
+      tags:
+        - Recommendations
+      summary: Get personalized recommendations
+      description: Get product recommendations based on user's order history
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of recommended products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+
+  /health:
+    get:
+      tags:
+        - System
+      summary: Health check
+      description: Check API health status
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: OK
+                  message:
+                    type: string
+                    example: E-book Store API is running
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "1"
+        email:
+          type: string
+          format: email
+          example: demo@ebook.com
+        name:
+          type: string
+          example: Demo User
+        giftPoints:
+          type: integer
+          example: 500
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          example: book1
+        title:
+          type: string
+          example: The Great Gatsby
+        author:
+          type: string
+          example: F. Scott Fitzgerald
+        category:
+          type: string
+          example: Fiction
+        brand:
+          type: string
+          example: Penguin Classics
+        price:
+          type: number
+          format: float
+          example: 12.99
+        description:
+          type: string
+        coverImage:
+          type: string
+          format: uri
+        deliveryDate:
+          type: string
+          format: date-time
+        relatedProducts:
+          type: array
+          items:
+            type: string
+        rating:
+          type: number
+          format: float
+          example: 4.5
+        reviews:
+          type: integer
+          example: 1250
+
+    Cart:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              productId:
+                type: string
+              quantity:
+                type: integer
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+          example: order1
+        userId:
+          type: string
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              productId:
+                type: string
+              quantity:
+                type: integer
+              price:
+                type: number
+        totalAmount:
+          type: number
+          format: float
+        status:
+          type: string
+          enum: [pending, processing, shipped, delivered, cancelled]
+        orderDate:
+          type: string
+          format: date-time
+        deliveryAddress:
+          $ref: '#/components/schemas/Address'
+        paymentMethod:
+          type: string
+          enum: [credit-card, paypal, upi, cod]
+        giftPointsUsed:
+          type: integer
+
+    OrderRequest:
+      type: object
+      required:
+        - userId
+        - items
+        - totalAmount
+        - deliveryAddress
+        - paymentMethod
+      properties:
+        userId:
+          type: string
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              productId:
+                type: string
+              quantity:
+                type: integer
+              price:
+                type: number
+        totalAmount:
+          type: number
+        deliveryAddress:
+          $ref: '#/components/schemas/Address'
+        paymentMethod:
+          type: string
+          enum: [credit-card, paypal, upi, cod]
+        giftPointsUsed:
+          type: integer
+          default: 0
+
+    Address:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [Home, Work, Other]
+        street:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        zipCode:
+          type: string
+        country:
+          type: string
+
+    AddressInput:
+      type: object
+      required:
+        - type
+        - street
+        - city
+        - state
+        - zipCode
+        - country
+      properties:
+        type:
+          type: string
+          enum: [Home, Work, Other]
+        street:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        zipCode:
+          type: string
+        country:
+          type: string
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Error message description
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []
+
+# Made with Bob
