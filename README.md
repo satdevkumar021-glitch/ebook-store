@@ -381,3 +381,11 @@ For issues or questions, please refer to the documentation or create an issue in
 ---
 
 **Happy Shopping! 📚🛒**
+
+## License, contributions and security
+
+Original material is available under the [MIT License](LICENSE). Preserve the copyright and license notice when reusing it. Third-party material retains its own terms; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
+
+### Important demo security limitation
+
+This is an educational prototype. Despite earlier descriptions above, the current server uses mock token strings and demonstration password handling, not verified JWT authentication or real password hashing. User-ID API routes are not protected by verified authentication. Do not use it for real customer data or payments.
