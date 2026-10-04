@@ -201,9 +201,9 @@ npm start
 ## ✨ Key Features Explained
 
 ### 1. User Authentication
-- Secure login/registration system
-- Session management with JWT tokens
-- Protected routes requiring authentication
+- Demonstration login/registration flow
+- Mock token strings for the client demo
+- API authorization and production password hashing are not implemented
 
 ### 2. Product Catalogue
 - Filter by category and brand
@@ -388,4 +388,4 @@ Original material is available under the [MIT License](LICENSE). Preserve the co
 
 ### Important demo security limitation
 
-This is an educational prototype. Despite earlier descriptions above, the current server uses mock token strings and demonstration password handling, not verified JWT authentication or real password hashing. User-ID API routes are not protected by verified authentication. Do not use it for real customer data or payments.
+This is an educational prototype. The current server uses mock token strings and demonstration password handling, not verified JWT authentication or real password hashing. User-ID API routes are not protected by verified authentication. Do not use it for real customer data or payments.
